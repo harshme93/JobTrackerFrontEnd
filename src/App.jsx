@@ -32,6 +32,7 @@ function App() {
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({ name: "", url: "", titles: "" });
   const [status, setStatus] = useState("");
+  const [lastRun, setLastRun] = useState(null);
 
   // Listen to companies collection
   useEffect(() => {
@@ -51,6 +52,16 @@ function App() {
         setSavedEmail(data.email || "");
       }
     });
+  }, []);
+
+  // Load last run timestamp
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, "settings", "last_run"), (snap) => {
+      if (snap.exists()) {
+        setLastRun(snap.data());
+      }
+    });
+    return unsub;
   }, []);
 
   const flash = (msg) => {
@@ -106,6 +117,12 @@ function App() {
   return (
     <div style={styles.container}>
       <h1 style={styles.h1}>Job Tracker</h1>
+
+      {lastRun && (
+        <div style={styles.lastRun}>
+          Last checked: {new Date(lastRun.timestamp).toLocaleString()} — {lastRun.jobs_found} new job(s) found
+        </div>
+      )}
 
       {status && <div style={styles.flash}>{status}</div>}
 
@@ -205,7 +222,8 @@ function App() {
 
 const styles = {
   container: { maxWidth: 640, margin: "0 auto", padding: "2rem 1rem", fontFamily: "'IBM Plex Sans', sans-serif", color: "#1a1a1a" },
-  h1: { fontSize: "1.8rem", fontWeight: 700, marginBottom: "1.5rem", letterSpacing: "-0.02em" },
+  h1: { fontSize: "1.8rem", fontWeight: 700, marginBottom: "0.5rem", letterSpacing: "-0.02em" },
+  lastRun: { fontSize: "0.8rem", color: "#888", marginBottom: "1.25rem" },
   h2: { fontSize: "1.1rem", fontWeight: 600, marginBottom: "0.75rem" },
   card: { background: "#f7f7f7", borderRadius: 8, padding: "1.25rem", marginBottom: "1rem" },
   input: { width: "100%", padding: "0.6rem 0.75rem", border: "1px solid #ddd", borderRadius: 6, marginBottom: "0.5rem", fontSize: "0.9rem", boxSizing: "border-box" },
